@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+</head>
+<body>
+
+
+
+	<form method ="post" action="/initialize">
+		Seed
+		<input type='text' size='10' name='seed_url' >
+		Max page
+		<input type='text' size='10' name='max_pages' >
+
+
+    	<input type='submit' value='initialize' >
+
+	</form>
+
+
+	<input type='text' size='10' name='name' id="search-input">
+
+    <input type='submit' value='search' id="search-btn">
+
+
+
+
+	<script type="text/javascript">
+    $('#search-btn').click(function () {
+    				 window.location.href='/search/'+$('#search-input').val().replace(/\W/g, ' ');
+    			})
+  </script>
+</body>
+</html>

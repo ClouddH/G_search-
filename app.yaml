@@ -1,0 +1,30 @@
+application: garfieldsearch-153603
+version: 1
+runtime: python27
+api_version: 1
+threadsafe: true
+
+# [START handlers]
+handlers:
+- url: /.*
+  script: main.app
+
+- url: /tasks/test
+  script: task_q.app  
+  
+# [END handlers]
+
+# [START libraries]
+libraries:
+#- name: validators
+#  version: latest 
+- name: webapp2
+  version: latest
+- name: jinja2
+  version: latest
+- name: endpoints
+  version: latest 
+#- name: validators
+#  version: latest   
+# [END libraries]
+
