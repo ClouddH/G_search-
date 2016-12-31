@@ -32,6 +32,14 @@ import sys
 import random
 import string 
 from flask import session as login_session
+from webapp2_extras import sessions
+import httplib2
+import urlfetch
+
+config = {}
+config['webapp2_extras.sessions'] = {
+    'secret_key': 'my_secret_key',
+}
 
 
 template_dir = os.path.join(os.path.dirname(__file__), "templates")
@@ -61,6 +69,23 @@ class Handler(webapp2.RequestHandler):
 
     def render(self, template, **kw):
         self.write(self.render_str(template, **kw))
+
+    def dispatch(self):                                 # override dispatch
+        # Get a session store for this request.
+        self.session_store = sessions.get_store(request=self.request)
+
+        try:
+            # Dispatch the request.
+            webapp2.RequestHandler.dispatch(self)       # dispatch the main handler
+        finally:
+            # Save all sessions.
+            self.session_store.save_sessions(self.response)
+
+    @webapp2.cached_property
+    def session(self):
+        # Returns a session using the default cookie key.
+        return self.session_store.get_session()
+    
 
     #def create_file(self, filename,filecontent):
 	#    """Create a file.
@@ -116,7 +141,7 @@ class MainPage(Handler):
 	def get(self):
 		state = ''.join(random.choice(string.ascii_uppercase + string.digits)
 						for x in xrange(32))
-		login_session['state'] = state
+		self.session['state'] = state
 		self.render("home.html",STATE = state)
 
 
@@ -357,12 +382,14 @@ class FBconnect(Handler):
 	def post(self):
 	    print "function called"
 	    print self.request.get('STATE')
-	    print login_session['state']
-	    if self.request.get('state') != login_session['state']:
+	    print self.session['state']
+	    if self.request.get('state') != self.session['state']:
 	        response = make_response(json.dumps('Invalid state parameter.'), 401)
 	        response.headers['Content-Type'] = 'application/json'
 	        return response
-	    access_token = request.data
+	    access_token = self.request.get('access_token')
+	    print access_token    
+	    #access_token = request.data
 	    print "access token received %s " % access_token
 
 	    app_id = json.loads(open('fb_client_secrets.json', 'r').read())[
@@ -373,6 +400,10 @@ class FBconnect(Handler):
 	        app_id, app_secret, access_token)
 	    h = httplib2.Http()
 	    result = h.request(url, 'GET')[1]
+
+	    
+	    print "result is here"
+	    print result
 
 	    # Use token to get user info from API
 	    userinfo_url = "https://graph.facebook.com/v2.4/me"
@@ -386,14 +417,14 @@ class FBconnect(Handler):
 	    # print "url sent for API access:%s"% url
 	    # print "API JSON result: %s" % result
 	    data = json.loads(result)
-	    login_session['provider'] = 'facebook'
-	    login_session['username'] = data["name"]
-	    login_session['email'] = data["email"]
-	    login_session['facebook_id'] = data["id"]
+	    self.sessions['provider'] = 'facebook'
+	    self.sessions['username'] = data["name"]
+	    self.sessions['email'] = data["email"]
+	    self.sessions['facebook_id'] = data["id"]
 
 	    # The token must be stored in the login_session in order to properly logout, let's strip out the information before the equals sign in our token
 	    stored_token = token.split("=")[1]
-	    login_session['access_token'] = stored_token
+	    self.sessions['access_token'] = stored_token
 
 	    # Get user picture
 	    url = 'https://graph.facebook.com/v2.4/me/picture?%s&redirect=0&height=200&width=200' % token
@@ -401,28 +432,34 @@ class FBconnect(Handler):
 	    result = h.request(url, 'GET')[1]
 	    data = json.loads(result)
 
-	    login_session['picture'] = data["data"]["url"]
+	    self.session['picture'] = data["data"]["url"]
 
 	    # see if user exists
-	    user_id = getUserID(login_session['email'])
-	    if not user_id:
-	        user_id = createUser(login_session)
-	    login_session['user_id'] = user_id
-	    print user_id
+	    #user_id = getUserID(self.session['email'])
+	    #if not user_id:
+	    #    user_id = createUser(self.session)
+	    #self.session['user_id'] = user_id
+	    #print user_id
 
 	    output = ''
 	    output += '<h1>Welcome, '
-	    output += login_session['username']
+	    output += self.session['username']
 
 	    output += '!</h1>'
 	    output += '<img src="'
-	    output += login_session['picture']
+	    output += self.session['picture']
 	    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
 
-	    flash("Now logged in as %s" % login_session['username'])
+	    flash("Now logged in as %s" % self.session['username'])
 	    print "success!"
 	    return output
-
+	#def createUser(session):
+	#    newUser = User(name=session['username'], email=session[
+	#                   'email'], picture=session['picture'])
+	#    session.add(newUser)
+	#    session.commit()
+	#    user = session.query(User).filter_by(email=login_session['email']).one()
+	#    return user.id    
 
 PAGE_RE = r'((?:[ ,./?"\'a-zA-Z0-9_=&-]+?)*)'
 
@@ -437,4 +474,4 @@ app = webapp2.WSGIApplication([("/", MainPage),
 								("/send_email",Send_email),
 								("/initialize_public_index",Init_public_index),
 								("/build_public_index",Build_public_index),
-								("/fbconnect",FBconnect)], debug=True)
+								("/fbconnect",FBconnect)], debug=True,config=config)

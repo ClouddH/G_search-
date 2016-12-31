@@ -9,5 +9,10 @@ class Bucket(ndb.Model):
 class Ranks(ndb.Model):
 	owner = ndb.StringProperty(required=True)
 	ranks = ndb.JsonProperty(required=True) 
+class User(ndb.Model):
+	id =ndb.IntegerProperty(required=True)
+	name = ndb.StringProperty(required=True)
+	email = ndb.StringProperty(required=True)
+	picture =ndb.StringProperty()	
 
 
