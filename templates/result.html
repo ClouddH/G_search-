@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title></title>
+</head>
+<body>
+	{% for t in results %}
+
+	<section>
+
+		<a href= {{"%s"%t[0]}} > {{t[1]}} </a>
+		<p> {{t[2].decode('utf-8')}} </p>
+
+
+
+	</section>
+
+	{% endfor %}
+
+
+</body>
+</html>

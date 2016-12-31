@@ -1,36 +1,171 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title></title>
+	<title>Garfield Search - A cute toy search engine</title>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+	<link href='css/bootstrap.min.css' rel='stylesheet'>
+	<link href='css/style.css' rel='stylesheet'>
+    
 </head>
 <body>
+	<div class="container">
+		<div class="row topbar">
+			<div class="col-md-6 col-sm-6 col-xs-4"> 
+				<form method ="post" action="/initialize_custom_index">
+					Seed
+					<input type='text' size='10' name='seed_url' >
+					Max page
+					<input type='text' size='10' name='max_pages' >
 
 
+			    	<input type='submit' value='initialize' >
 
-	<form method ="post" action="/initialize">
-		Seed
-		<input type='text' size='10' name='seed_url' >
-		Max page
-		<input type='text' size='10' name='max_pages' >
+				</form>
 
 
-    	<input type='submit' value='initialize' >
+			</div>
+			<div class="col-md-6 col-sm-6 col-xs-6"> 
+				Further Functionality
+				<button>
+          				<fb:login-button scope="public_profile,email" onlogin="sendTokenToServer();">
+							<a href='javascript:sendTokenToServer()'>Login with Facebook</a>
 
-	</form>
+						</fb:login-button>
 
 
-	<input type='text' size='10' name='name' id="search-input">
+        		</button>
+			</div>
 
-    <input type='submit' value='search' id="search-btn">
+		</div>
 
+		<div class="row Logo" height>
+			<div class="col-md-4 col-sm-4 col-xs-4"></div>
+			<div class="col-md-4 col-sm-4 col-xs-4">
+				<section id ='logo_img' >
+				<img src='images/logo.jpg' class='img-responsive' alt='logo' />
+				</section>
+
+			</div>
+			<div class="col-md-4 col-sm-4 col-xs-4"></div>
+
+		</div>
+		
+		<div class="row search"> 
+			<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3"></div>
+			<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+				
+					<input class='search_bar' type='text' size='40' name='name' id="search-input" placeholder='Search Garfield or type URL'>
+
+    				
+
+			</div>
+			<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3"></div>
+
+		</div>
+		<div class="row search"> 
+			<div class="col-lg-5 col-md-5 col-sm-5 col-xs-5"></div>
+			<div class="col-lg-2 col-md-2 col-sm-2 col-xs-2">
+				
+					<input class='search_button' type='submit' value='Garfield Search' id="search-btn">
+
+    				
+
+			</div>
+			<div class="col-lg-5 col-md-5 col-sm-5 col-xs-5"></div>
+
+		</div>
+
+		<div class="row footer navbar-fixed-bottom">
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-center">
+				<span>
+					<a class='link'href='/'> About</a>
+					<a class='link' href='/'> Source code </a>
+
+
+				</span>
+			</div>
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-center">
+				<p> Made by Cloud.H © 2016   All rights reserved</p>
+			</div>
+
+
+			<div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 text-center">
+				<span>
+					<a class='link' href='/'> Resume</a>
+					<a class='link' href='/'> Portfolio  </a>
+					
+
+				</span>
+			</div>
+
+		</div>
+
+
+	</div>	
+
+
+	
+
+	
 
 
 
 	<script type="text/javascript">
     $('#search-btn').click(function () {
-    				 window.location.href='/search/'+$('#search-input').val().replace(/\W/g, ' ');
+    				 window.location.href='/search?query='+$('#search-input').val().replace(/\W/g, ' ')+'&type=public';
     			})
   </script>
+  <script>
+  window.fbAsyncInit = function() {
+  FB.init({
+    appId      : '1893650580869629',
+    cookie     : true,  // enable cookies to allow the server to access 
+                        // the session
+    xfbml      : true,  // parse social plugins on this page
+    version    : 'v2.2' // use version 2.2
+  });
+  };
+  // Load the SDK asynchronously
+  (function(d, s, id) {
+    var js, fjs = d.getElementsByTagName(s)[0];
+    if (d.getElementById(id)) return;
+    js = d.createElement(s); js.id = id;
+    js.src = "//connect.facebook.net/en_US/sdk.js";
+    fjs.parentNode.insertBefore(js, fjs);
+  }(document, 'script', 'facebook-jssdk'));
+
+   function sendTokenToServer() {
+    var access_token = FB.getAuthResponse()['accessToken'];
+    console.log(access_token)
+    console.log('Welcome!  Fetching your information.... ');
+    
+    FB.api('/me', function(response) {
+      console.log('Successful login for: ' + response.name);
+      console.log('/fbconnect?state={{STATE}}')
+     $.ajax({
+      type: 'POST',
+      url: '/fbconnect?state={{STATE}}',
+      processData: false,
+      data: access_token,
+      contentType: 'application/octet-stream; charset=utf-8',
+      success: function(result) {
+        // Handle or verify the server response if necessary.
+        if (result) {
+          $('#result').html('Login Successful!</br>'+ result + '</br>Redirecting...')
+         setTimeout(function() {
+          window.location.href = "/restaurant";
+         }, 4000);
+          
+      } else {
+        $('#result').html('Failed to make a server-side call. Check your configuration and console.');
+         }
+      }
+      
+  });
+    });
+  }
+
+
+</script>
 </body>
 </html>

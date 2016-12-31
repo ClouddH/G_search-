@@ -1,0 +1,36 @@
+
+body{
+	min-height: 100%;
+}
+.search{
+	margin-top: 10px;
+
+}
+.search_bar{
+	width: 100%;
+}
+.search_button{
+	
+	width :100%;
+}
+
+#logo_img {
+	
+	width: 100% ;
+	padding-top: 20px;
+	padding-bottom: 20px;
+	margin-top: 20px;
+	margin-bottom: 20px
+}
+
+.link{
+	margin-left: 1em;
+	margin-right: 1em;
+
+}
+
+.footer{
+	background: #fff;
+    color: #222;
+    
+}

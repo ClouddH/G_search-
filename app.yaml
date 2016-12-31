@@ -4,14 +4,22 @@ runtime: python27
 api_version: 1
 threadsafe: true
 
+manual_scaling:
+  instances: 1
 # [START handlers]
 handlers:
-- url: /.*
-  script: main.app
 
-- url: /tasks/test
-  script: task_q.app  
-  
+- url: /css
+  static_dir: templates/css 
+- url: /images
+  static_dir: templates/images
+- url: /js
+  static_dir: templates/js  
+- url: /.*
+  script: main.app       
+
+
+
 # [END handlers]
 
 # [START libraries]
@@ -24,6 +32,7 @@ libraries:
   version: latest
 - name: endpoints
   version: latest 
+
 #- name: validators
 #  version: latest   
 # [END libraries]

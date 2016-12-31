@@ -1,0 +1,43 @@
+
+<!-- saved from url=(0052)http://localhost:12080/search?query=code&type=public -->
+<html class="gr__localhost"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Internal Server Error</title>
+    <style>
+      body {
+        padding: 20px;
+        font-family: arial, sans-serif;
+        font-size: 14px;
+      }
+      pre {
+        background: #F2F2F2;
+        padding: 10px;
+      }
+    </style>
+  </head>
+  <body data-gr-c-s-loaded="true">
+    <h1>Internal Server Error</h1>
+    <p>The server has either erred or is incapable of performing
+    the requested operation.</p>
+    <pre>Traceback (most recent call last):
+  File "/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/webapp2-2.5.2/webapp2.py", line 1535, in __call__
+    rv = self.handle_exception(request, response, e)
+  File "/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/webapp2-2.5.2/webapp2.py", line 1529, in __call__
+    rv = self.router.dispatch(request, response)
+  File "/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/webapp2-2.5.2/webapp2.py", line 1278, in default_dispatcher
+    return route.handler_adapter(request, response)
+  File "/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/webapp2-2.5.2/webapp2.py", line 1102, in __call__
+    return handler.dispatch()
+  File "/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/webapp2-2.5.2/webapp2.py", line 572, in dispatch
+    return self.handle_exception(e, self.app.debug)
+  File "/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/lib/webapp2-2.5.2/webapp2.py", line 570, in dispatch
+    return method(*args, **kwargs)
+  File "/Users/cloud/Desktop/Garfield Search /main.py", line 270, in get
+    ranks = list(Ranks.query(owner='public'))[0].ranks
+  File "/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/google/appengine/ext/ndb/model.py", line 3428, in _query
+    qry = Query(kind=cls._get_kind(), **kwds)
+  File "/Applications/GoogleAppEngineLauncher.app/Contents/Resources/GoogleAppEngine-default.bundle/Contents/Resources/google_appengine/google/appengine/ext/ndb/utils.py", line 160, in positional_wrapper
+    return wrapped(*args, **kwds)
+TypeError: __init__() got an unexpected keyword argument 'owner'
+</pre>
+  
+</body></html>

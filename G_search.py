@@ -128,83 +128,62 @@ def convert_to_buckets(index):
 
 	return buckets
 
-
-
-def crawl_web(seed,max_pages,search_type):
+def crawl_web(seeds,search_type):
 	print "crawling started"
+	print seeds
 	
-	to_crawl =[seed]
-	crawled =[]
-	index=dict()
-	graph=dict()
-
 	
-	while to_crawl :
-		current_domain =""
+	index =dict()
+	graph =dict()
+	total_pages =40
+
+	for item in seeds:
+		to_crawl =  [item[0]]
+		print to_crawl
+
+		max_pages = item[1]
+		print max_pages
+		crawled =[]
+
+		while to_crawl:
 		
-		if search_type=="BFS":
-			current_page = to_crawl[0]
-			to_crawl=to_crawl[1:]
-			if current_page.find('https://')!=1 or current_page.find('http://')!=1:
-				o =urlparse(current_page)
-				current_domain = o.scheme+ "://"+ o.netloc
+			current_domain=""
 
-				#print "current_domain"
-				#print current_domain
-		if search_type=="DFS":
-			current_page = to_crawl.pop()
-			#if current_page.find('https://')!=1 or current_page.find('http://')!=1:
-			#	current_domain = urlparse(link).netloc
-			#	print "current_domain"
-			#	print current_domain
-
-		crawled.append(current_page)
-		#print "crawled"
-		#print crawled
-		print "crawling"+str(len(crawled))
-		print current_page
-
-		if len(crawled)-1 >= max_pages:
-			break
-
-		content = get_page(current_page)
-		
-		if content:	
-			add_page_to_index(index,current_page,content)
-			outlinks = get_all_links(content)
-			graph[current_page]=outlinks
-			for link in outlinks :
-				#print "link is :"
-				#print link 
-				#print "contained in crawled :"
-				#print link in crawled
-				#if not link in crawled and  (link.find('https://')!=-1 or  link.find('http://')!=-1):
-				if not link in crawled and not link=="#":
+			if search_type=="BFS":
+				current_page = to_crawl[0]
+				to_crawl=to_crawl[1:]
+				if 'https://' in current_page or 'http://' in current_page:
+					o =urlparse(current_page)
+					current_domain = o.scheme+ "://"+ o.netloc
+			if search_type =="DFS":
+				pass
+			crawled.append(current_page)
+			print "crawling"+str(len(crawled))
+			print current_page	
+			if len(crawled)-1 >= max_pages:
+				break
+			content = get_page(current_page)
+			if content:	
+				add_page_to_index(index,current_page,content)
+				outlinks = get_all_links(content)
+				graph[current_page]=outlinks
+				for link in outlinks :	
+					if not link in crawled and not link=="#":
 					
 					
-					if link.find('https://')!=-1 or  link.find('http://')!=-1:
-						to_crawl.append(link) 	
+						if link.find('https://')!=-1 or  link.find('http://')!=-1:
+							to_crawl.append(link) 	
 
-					if link[0]=="/" and link.find("//")==-1 and url.url(current_domain+link):
-						#print "modified local url"
-						#print current_domain+link
-						to_crawl.append(current_domain+link) 
-					
-						
+						if link[0]=="/" and link.find("//")==-1 and url.url(current_domain+link):
+							#print "modified local url"
+							#print current_domain+link
+							to_crawl.append(current_domain+link) 	
 
-					#print "append executed"
-					
-		
-		
+		print "finish indexing one seed "
+		print "current_seed"+item[0]
+		print "page crawled"+str(item[1])	
 
-	print "crawling end"
-	print "index length"
-	print len(index)  
-	buckets = convert_to_buckets(index)
-	#print crawled
-
-	return buckets ,graph
-
+	return index,graph					
 
 
         
