@@ -5,13 +5,16 @@
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 	<link href='css/bootstrap.min.css' rel='stylesheet'>
 	<link href='css/style.css' rel='stylesheet'>
+	<meta name="viewport" content="width=device-width,initial-scale=1.0">
     
 </head>
 <body>
 	<div class="container">
 		<div class="row topbar">
 			<div class="col-md-6 col-sm-6 col-xs-4"> 
-				<form method ="post" action="/initialize_custom_index">
+
+				<!-- 
+					<form method ="post" action="/initialize_custom_index">
 					Seed
 					<input type='text' size='10' name='seed_url' >
 					Max page
@@ -23,17 +26,27 @@
 				</form>
 
 
+
+
+				-->
+				
+
+
 			</div>
 			<div class="col-md-6 col-sm-6 col-xs-6"> 
 				Further Functionality
-				<button>
+				<!-- 
+					<button>
           				<fb:login-button scope="public_profile,email" onlogin="sendTokenToServer();">
 							<a href='javascript:sendTokenToServer()'>Login with Facebook</a>
 
 						</fb:login-button>
 
 
-        		</button>
+        			</button>
+
+				-->
+				
 			</div>
 
 		</div>
@@ -42,7 +55,7 @@
 			<div class="col-md-4 col-sm-4 col-xs-4"></div>
 			<div class="col-md-4 col-sm-4 col-xs-4">
 				<section id ='logo_img' >
-				<img src='images/logo.jpg' class='img-responsive' alt='logo' />
+				<img  src='images/logo.jpg' class='img-responsive' alt='logo' />
 				</section>
 
 			</div>
@@ -54,7 +67,7 @@
 			<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3"></div>
 			<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
 				
-					<input class='search_bar' type='text' size='40' name='name' id="search-input" placeholder='Search Garfield or type URL'>
+					<input class='search_bar' type='text'  name='name' id="search-input" placeholder='Search Garfield or type URL'>
 
     				
 
@@ -103,18 +116,51 @@
 
 	</div>	
 
+<div id='result'>
 
+</div>
 	
 
 	
 
+<script type="text/javascript">
+    $('#search-btn').click(search);
+    $(document).keypress(function(e) {
+    	if(e.which == 13) {
+       		search(); 
+    	}
+	});
 
 
-	<script type="text/javascript">
-    $('#search-btn').click(function () {
-    				 window.location.href='/search?query='+$('#search-input').val().replace(/\W/g, ' ')+'&type=public';
-    			})
-  </script>
+    function search() {
+
+    url_callback =	'/search?query='+$('#search-input').val().replace(/\W/g, ' ')+'&type=public';
+
+ 	$('body').html('waiting page')	
+
+	 $.ajax({
+      type: 'GET',
+      url: url_callback,
+      processData: false,
+      //data: access_token,
+      contentType: 'application/octet-stream; charset=utf-8',
+      success: function(result) {
+        // Handle or verify the server response if necessary.
+        if (result) {
+        	console.log("server side function returned")
+          $('html').html(result)
+          
+      } else {
+        $('html').html('Failed to make a server-side call. Check your configuration and console.');
+         }
+      }
+      
+  });
+    			}	
+ </script>
+
+
+
   <script>
   window.fbAsyncInit = function() {
   FB.init({

@@ -35,11 +35,14 @@ from flask import session as login_session
 from webapp2_extras import sessions
 import httplib2
 import urlfetch
+import facebook
 
 config = {}
 config['webapp2_extras.sessions'] = {
     'secret_key': 'my_secret_key',
 }
+FACEBOOK_APP_ID ='1893650580869629'
+FACEBOOK_APP_SECRET ="20c37ca4642240ea3fdcf737801121c2"
 
 
 template_dir = os.path.join(os.path.dirname(__file__), "templates")
@@ -351,6 +354,7 @@ class Search(Handler):
 			
 		#print result_tuple_lst	
 		self.render("result.html" ,results =result_tuple_lst)
+		
 
 	def get_snippet(self,url,soup):
 		
@@ -377,8 +381,32 @@ class Search(Handler):
 		
 		return str(result.encode('utf-8'))	
 
-
 class FBconnect(Handler):
+	def post(self):
+		#current_user = self.current_user
+		#graph = facebook.GraphAPI(self.current_user['access_token'])
+		self.current_user()
+
+
+	def current_user(self):
+	       if self.session.get("user"):
+	            # user is logged in
+	            return self.session.get("user")
+	       else:
+	            # either user just logged in or just saw the first page
+	            # we'll see here
+	            fb_user = facebook.get_user_from_cookie(self.request.cookies, FACEBOOK_APP_ID, FACEBOOK_APP_SECRET)
+	            if fb_user:
+	                # okay so user logged in.
+	                # now, check to see if existing user
+
+	                graph = facebook.GraphAPI(fb_user["access_token"])
+	                profile = graph.get_object("me")
+	                print "end"
+
+
+
+class FBconnect2(Handler):
 	def post(self):
 	    print "function called"
 	    print self.request.get('STATE')
