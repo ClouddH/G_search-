@@ -106,6 +106,8 @@ def hash_string(keyword,buckets):
     return total % buckets
 
 def convert_to_buckets(index):
+	print "start to convert"
+	
 
 	buckets = dict()
 

@@ -50,3 +50,22 @@ body{
 	margin-right:2em;
 	margin-bottom: 3em:;
 }
+
+#waiting_page{
+	display: none;
+}
+.top-padding{
+	height: 30%;
+	max-height: 30%;
+
+	
+}
+
+.bottom-padding{
+	height: 30%;
+	max-height: 30%;
+
+}
+#template{
+	display: none;
+}

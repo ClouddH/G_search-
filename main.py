@@ -236,6 +236,8 @@ class Build_public_index(Handler):
 
 		seeds =	[('http://stackoverflow.com/',10),('https://uwaterloo.ca/',10),('https://www.reddit.com/',10),('https://www.ft.com/',10)]
 		index, graph = G_search.crawl_web(seeds,"BFS")
+		print "len index"
+		print len(index)
 		buckets = G_search.convert_to_buckets(index)
 		ranks = G_search.compute_ranks(graph) 
 		count=0
@@ -403,7 +405,13 @@ class FBconnect(Handler):
 	                graph = facebook.GraphAPI(fb_user["access_token"])
 	                profile = graph.get_object("me")
 	                print "end"
+class Display(Handler):
+	def post(self):
+		print "display called"
 
+		result = self.request.get("result")
+		print result 
+		self.render("result.html")
 
 
 class FBconnect2(Handler):
@@ -502,4 +510,5 @@ app = webapp2.WSGIApplication([("/", MainPage),
 								("/send_email",Send_email),
 								("/initialize_public_index",Init_public_index),
 								("/build_public_index",Build_public_index),
-								("/fbconnect",FBconnect)], debug=True,config=config)
+								("/fbconnect",FBconnect),
+								("/display",Display)], debug=True,config=config)

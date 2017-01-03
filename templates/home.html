@@ -116,47 +116,75 @@
 
 	</div>	
 
-<div id='result'>
+	
 
 </div>
-	
+
+<div id='template'>
+	<!DOCTYPE! html>
+<html>
+<head>
+	<title>Garfield Search - A cute toy search engine</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+	<link href='css/bootstrap.min.css' rel='stylesheet'>
+	<link href='css/style.css' rel='stylesheet'>
+	<meta name="viewport" content="width=device-width,initial-scale=1.0">
+    
+</head>
+<body>
+	<div class='container'>
+		<div class ='row top-padding'></div>
+		<div class ='row content text-center'>
+			<div class='col-lg-4 col-md-4 col-sm-4 col-xs-4'></div>
+			<div class='col-lg-4 col-md-4 col-sm-4 col-xs-4'>
+				<img  src='images/waiting_gif.gif' class='img-responsive' alt='logo' />
+				<h5 > Garfield is searching .....</h5>
+
+			</div>
+			<div class='col-lg-4 col-md-4 col-sm-4 col-xm-4'></div>
+
+		</div>
+
+		<div class ='row bottom-padding'></div>
+
+
+	</div>
+
+</body>
+</html>
+
+
+
+</div>	
 
 	
 
 <script type="text/javascript">
-    $('#search-btn').click(search);
-    $(document).keypress(function(e) {
+
+	
+	
+	$('#search-btn').click(search)
+	$(document).keypress(function(e) {
     	if(e.which == 13) {
-       		search(); 
+    		search();
+       	
     	}
 	});
 
 
     function search() {
 
-    url_callback =	'/search?query='+$('#search-input').val().replace(/\W/g, ' ')+'&type=public';
 
- 	$('body').html('waiting page')	
+    	url_callback ='/search?query='+$('#search-input').val().replace(/\W/g, ' ')+'&type=public';
+		
+		$("html").html($("#template").html());
+		
+		window.location.href = url_callback
+    }	
 
-	 $.ajax({
-      type: 'GET',
-      url: url_callback,
-      processData: false,
-      //data: access_token,
-      contentType: 'application/octet-stream; charset=utf-8',
-      success: function(result) {
-        // Handle or verify the server response if necessary.
-        if (result) {
-        	console.log("server side function returned")
-          $('html').html(result)
-          
-      } else {
-        $('html').html('Failed to make a server-side call. Check your configuration and console.');
-         }
-      }
-      
-  });
-    			}	
+   
+
+   			
  </script>
 
 
