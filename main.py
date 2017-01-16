@@ -28,7 +28,7 @@ import operator
 from google.appengine.api import taskqueue
 from google.appengine.api import mail
 from BeautifulSoup import BeautifulSoup
-import sys
+
 import random
 import string 
 from flask import session as login_session
@@ -37,10 +37,26 @@ import httplib2
 import urlfetch
 import facebook
 
-config = {}
-config['webapp2_extras.sessions'] = {
-    'secret_key': 'my_secret_key',
+
+import sys
+
+from webapp2 import WSGIApplication, Route
+if 'lib' not in sys.path:
+    sys.path[0:0] = ['lib']
+
+
+app_config = {
+  'webapp2_extras.sessions': {
+    'cookie_name': '_simpleauth_sess',
+    'secret_key': "session_key"
+  },
+  'webapp2_extras.auth': {
+    'user_attributes': []
+  }
 }
+
+
+
 FACEBOOK_APP_ID ='1893650580869629'
 FACEBOOK_APP_SECRET ="20c37ca4642240ea3fdcf737801121c2"
 
@@ -234,7 +250,7 @@ class Build_public_index(Handler):
 		for bucket in buckets :
 			bucket.key.delete()
 
-		seeds =	[('http://stackoverflow.com/',10),('https://uwaterloo.ca/',10),('https://www.reddit.com/',10),('https://www.ft.com/',10)]
+		seeds =	[('http://stackoverflow.com/',1000),('https://uwaterloo.ca/',1000),('https://www.reddit.com/',1000),('https://www.ft.com/',1000)]
 		index, graph = G_search.crawl_web(seeds,"BFS")
 		print "len index"
 		print len(index)
@@ -511,4 +527,4 @@ app = webapp2.WSGIApplication([("/", MainPage),
 								("/initialize_public_index",Init_public_index),
 								("/build_public_index",Build_public_index),
 								("/fbconnect",FBconnect),
-								("/display",Display)], debug=True,config=config)
+								("/display",Display)], debug=True,config=app_config)
