@@ -1,5 +1,8 @@
 
 #import endpoints
+import sys
+reload(sys)
+sys.setdefaultencoding("utf-8")
 import logging
 import os
 import lib.cloudstorage as gcs
@@ -20,7 +23,7 @@ import json
 import time
 
 import json
-from models import Bucket,Ranks
+from models import Bucket, Ranks, Snippet_Bucket
 import G_search
 from google.appengine.api import memcache
 import pickle
@@ -30,15 +33,12 @@ from google.appengine.api import mail
 from BeautifulSoup import BeautifulSoup
 
 import random
-import string 
+import string
 from flask import session as login_session
 from webapp2_extras import sessions
 import httplib2
 import urlfetch
-import facebook
 
-
-import sys
 
 from webapp2 import WSGIApplication, Route
 if 'lib' not in sys.path:
@@ -46,35 +46,19 @@ if 'lib' not in sys.path:
 
 
 app_config = {
-  'webapp2_extras.sessions': {
-    'cookie_name': '_simpleauth_sess',
-    'secret_key': "session_key"
-  },
-  'webapp2_extras.auth': {
-    'user_attributes': []
-  }
+    'webapp2_extras.sessions': {
+        'cookie_name': '_simpleauth_sess',
+        'secret_key': "session_key"
+    },
+    'webapp2_extras.auth': {
+        'user_attributes': []
+    }
 }
-
-
-
-FACEBOOK_APP_ID ='1893650580869629'
-FACEBOOK_APP_SECRET ="20c37ca4642240ea3fdcf737801121c2"
 
 
 template_dir = os.path.join(os.path.dirname(__file__), "templates")
 jinja_env = jinja2.Environment(
     loader=jinja2.FileSystemLoader(template_dir), autoescape=True)
-
-
-### Enable Search in different Language
-### Google Facebook Log in  + Read Account info
-### Waiting page 
-### Better Web snippet 
-
-
-
-
-
 
 
 class Handler(webapp2.RequestHandler):
@@ -95,7 +79,8 @@ class Handler(webapp2.RequestHandler):
 
         try:
             # Dispatch the request.
-            webapp2.RequestHandler.dispatch(self)       # dispatch the main handler
+            # dispatch the main handler
+            webapp2.RequestHandler.dispatch(self)
         finally:
             # Save all sessions.
             self.session_store.save_sessions(self.response)
@@ -104,427 +89,183 @@ class Handler(webapp2.RequestHandler):
     def session(self):
         # Returns a session using the default cookie key.
         return self.session_store.get_session()
-    
-
-    #def create_file(self, filename,filecontent):
-	#    """Create a file.
-	#    The retry_params specified in the open call will override the default
-	#    retry params for this particular file handle.
-	#    Args:
-	#      filename: filename.
-	#    """
-
-	    
-	#    bucket_name = os.environ.get('BUCKET_NAME',
-	#                                 app_identity.get_default_gcs_bucket_name())
-	#    bucket = '/' + bucket_name
-	#   filename = bucket + '/%s' %filename
-	#    self.tmp_filenames_to_clean_up = []
-
-	#    self.response.write('Creating file %s\n' % filename)
-
-	#   write_retry_params = gcs.RetryParams(backoff_factor=1.1)
-	#   gcs_file = gcs.open(filename,
-	#                        'w',
-	#                       content_type='text/plain',
-	#                        options={'x-goog-meta-foo': 'foo',
-	#                                 'x-goog-meta-bar': 'bar'},
-	#                        retry_params=write_retry_params)
-	    
-	#    gcs_file.write(filecontent)
-	#    gcs_file.close()
-	#    self.tmp_filenames_to_clean_up.append(filename)	
-	    
-	#    self.read_file(filename)
-	#    self.response.write('\n\n')
-
-
-	#[START read]
-    #def read_file(self, filename):
-	    #self.response.write('Abbreviated file content (first line and last 1K):\n')
-
-	#    gcs_file = gcs.open(filename)
-	#    self.response.write(gcs_file.readline())
-	#    gcs_file.seek(-3024000000000000000000000000000000000, os.SEEK_END)
-	#    result =gcs_file.read()
-	#    gcs_file.close()  
-	    
-	#    return result
-
-
-
 
 
 class MainPage(Handler):
 
-	def get(self):
-		state = ''.join(random.choice(string.ascii_uppercase + string.digits)
-						for x in xrange(32))
-		self.session['state'] = state
-		self.render("home.html",STATE = state)
+    def get(self):
+        state = ''.join(random.choice(string.ascii_uppercase + string.digits)
+                        for x in xrange(32))
+        self.session['state'] = state
+        self.render("home.html", STATE=state)
 
-
-
-
-class Init_custom_index(Handler):
-	def post(self):  
-		
-
-		seed_url = self.request.get("seed_url")
-		max_pages = self.request.get("max_pages")
-
-		
-		task = taskqueue.add(
-            url='/build_custom_index',
-            params={'seed_url': seed_url,'max_pages':max_pages})
-		
-
-
-
-		self.write("start building!!!!")
 
 class Init_public_index(Handler):
-	def get(self):  
-		
-		task = taskqueue.add(
+
+    def get(self):
+
+        task = taskqueue.add(
             url='/build_public_index',
             params={})
 
-		
-		self.response.write('start building public index !')
-
-
-
+        self.response.write('start building public index !')
 
 
 class Send_email(Handler):
-	def post(self):
-		mail.send_mail('noreply@garfieldsearch-153603.appspotmail.com',
-                           'ggyy920904@hotmail.com',
-                           'subject',
-                           'body')
 
-class Build_custom_index(Handler):
-	def post(self):  
-		self.write("start building index. A email will be sent when it is done ")
-		buckets =list (Bucket.query())
+    def post(self):
+        mail.send_mail('noreply@garfieldsearch-153603.appspotmail.com',
+                       'ggyy920904@hotmail.com',
+                       'subject',
+                       'body')
 
-		for bucket in buckets :
-			bucket.key.delete()
-
-		seed_url = self.request.get("seed_url")
-		max_pages = self.request.get("max_pages")
-
-		index, graph = G_search.crawl_web([(seed_url,int(max_pages))],"BFS")
-		buckets = G_search.convert_to_buckets(index)
-		ranks = G_search.compute_ranks(graph) 
-		count=0
-		for key in buckets:
-			current_bucket = Bucket(owner ='custom',hash_code = str(key) ,dictionary= buckets[key])
-			current_bucket.put()
-			print "storing bucket %s" %str(count)
-			count+=1
-
-		
-		curr_ranks = Ranks(owner ='public',ranks=ranks)
-		curr_ranks.put()
-		memcache.set("public_ranks",ranks)
-
-		
-		
-		
-
-		self.write("index initialized")
-		
-
-
-		self.write("building finished")
-		task = taskqueue.add(url='/send_email',params={})
-		print "enqueued"
 
 class Build_public_index(Handler):
-	def post(self):  
-		self.write("start building index. A email will be sent when it is done ")
-		buckets =list (Bucket.query())
 
-		for bucket in buckets :
-			bucket.key.delete()
+    def post(self):
 
-		seeds =	[('http://stackoverflow.com/',1000),('https://uwaterloo.ca/',1000),('https://www.reddit.com/',1000),('https://www.ft.com/',1000)]
-		index, graph = G_search.crawl_web(seeds,"BFS")
-		print "len index"
-		print len(index)
-		buckets = G_search.convert_to_buckets(index)
-		ranks = G_search.compute_ranks(graph) 
-		count=0
-		for key in buckets:
-			current_bucket = Bucket(owner ='public',hash_code = str(key) ,dictionary= buckets[key])
-			current_bucket.put()
-			print "storing bucket %s" %str(count)
-			count+=1
+        self.write("start building index.")
 
-		
-		curr_ranks = Ranks(owner='public',ranks=ranks)
-		curr_ranks.put()
-		memcache.set("public_ranks",ranks)
+        self.clean_up()
 
-		
-		
-	
+        # call web crawlers
+        seeds = [('http://stackoverflow.com/', 300), ('https://uwaterloo.ca/', 300),
+                 ('https://www.reddit.com/', 300), ('https://www.ft.com/', 300)]
+        index, graph, snippet_lookup = G_search.crawl_web(seeds, "BFS")
+
+        # split big dictionary into small buckets
+
+        buckets = G_search.convert_to_buckets(index)
+        snippet_buckets = G_search.convert_to_buckets(snippet_lookup)
+        ranks = G_search.compute_ranks(graph)
+
+        # write objects to data base
+
+        for key in buckets:
+            current_bucket = Bucket(
+                owner='public', hash_code=str(key), dictionary=buckets[key])
+            current_bucket.put()
+
+        for key in snippet_buckets:
+            current_bucket = Snippet_Bucket(
+                hash_code=str(key), dictionary=snippet_buckets[key])
+            current_bucket.put()
+
+        curr_ranks = Ranks(owner='public', ranks=ranks)
+        curr_ranks.put()
+
+    def clean_up(self):
+
+        buckets = list(Bucket.query())
+        snippet_bucket = list(Snippet_Bucket.query())
+        for bucket in buckets:
+            bucket.key.delete()
+        for bucket in snippet_bucket:
+            bucket.key.delete()
+
+
+'''
+   terrible   Clean up !!!!
+
+'''
+
+
 class Search(Handler):
-	def get(self,sth):
-		
-		query=self.request.get("query")
-		type_search = self.request.get("type")
-		#print type
-		#print query
-		
-		
-		num_results=10
-		tokens = G_search.split_string(query," .,:;'\"{}[]=-_`~\n<>!?/\\#$%^&*()+")
-	
-		#print tokens
 
-		index_set_list=[]
-		num_buckets = len(list(Bucket.query()))
-		print "check num buckets"
-		if num_buckets==0:
-			self.response.write("empty index")
-			return None
-		#print "num_buckets"
-		#print num_buckets
+    def get(self, query):
 
-		for token  in tokens:
-			token = token.lower()
-			hash_code =G_search.hash_string(token,num_buckets)
-			bucket =Bucket.query(Bucket.hash_code==str(hash_code)).get()
-			dictionary =bucket.dictionary
-			if token in dictionary:			
-				index_set_list.append( set(dictionary[token]) )
-		#print index_set_list	
+        query = self.request.get("query")
+        type_search = self.request.get("type")
 
-		if not index_set_list:
-			self.response.write("keyword not found")
-			return None 		
-	
-		links =list (set.intersection(*index_set_list)	)
+        num_results = 10
+        tokens = G_search.split_string(
+            query, " .,:;'\"{}[]=-_`~\n<>!?/\\#$%^&*()+")
 
-		#print query
+        index_set_list = []
+        num_buckets = len(list(Bucket.query()))
 
-		#index= pickle.loads(self.read_file("/app_default_bucket/index"))
-		#ranks= pickle.loads(self.read_file("/app_default_bucket/ranks"))
-		#ranks= memcache.get("ranks")
-		if type_search =="public":
-			if memcache.get('public_ranks'):
-				ranks = memcache.get('public_ranks')
+        if num_buckets == 0:
+            self.response.write("empty index")
+            return None
 
-			else:	
-				ranks = list(Ranks.query(owner='public'))[0].ranks
-				memcache.set('public_ranks',ranks)
+        for token in tokens:
+            token = token.lower()
+            hash_code = G_search.hash_string(token, num_buckets)
+            bucket = Bucket.query(Bucket.hash_code == str(hash_code)).get()
+            dictionary = bucket.dictionary
+            if token in dictionary:
+                index_set_list.append(set(dictionary[token]))
 
+        if not index_set_list:
+            self.response.write("keyword not found")
+            return None
 
-		url_ranks_look_up = dict()
+        links = list(set.intersection(*index_set_list)	)
 
-		for link in links :
-			url_ranks_look_up[link]=ranks[link]
-		sorted_url_ranks_list = sorted(url_ranks_look_up.items(), key=operator.itemgetter(1),reverse=True)
+        if type_search == "public":
 
-		result=[]
+            ranks = list(Ranks.query())[0].ranks
 
-		print result
-		for url_rank_tuple in sorted_url_ranks_list:
-			result.append(url_rank_tuple[0])
-		
-		if len(sorted_url_ranks_list)>num_results:
-			result = result[:num_results]
-		
-		#result = G_search.look_up(index,query,ranks,10)
-		print "url"
-		print result
-		if not result:
-			self.response.write("keyword not found")
+        url_ranks_look_up = dict()
 
+        for link in links:
+            url_ranks_look_up[link] = ranks[link]
+        sorted_url_ranks_list = sorted(
+            url_ranks_look_up.items(), key=operator.itemgetter(1), reverse=True)
 
-		result_tuple_lst=[]
-		for link in result:
-			if not memcache.get(link):
-				soup = BeautifulSoup(urllib2.urlopen(link))
-				title =  soup.title.string
-				snippet = self.get_snippet(link,soup)
+        result = []
 
+        for url_rank_tuple in sorted_url_ranks_list:
+            result.append(url_rank_tuple[0])
 
-				#snippet =""
-				#p1 = soup.p
-				#result+=p1.text+"\n"
+        if len(sorted_url_ranks_list) > num_results:
+            result = result[:num_results]
 
-				#while len(result)<150:
+        if not result:
+            self.response.write("keyword not found")
 
-				#	p2 = p1.findNext('p')
-				#	p2_text = p2.text
-					
-					
-				#	result+=p2.text+"\n"
-				#	p1 = p2
-				#result =result.encode('utf-8')
-				t =(link,title,snippet)
-				result_tuple_lst.append(t)
-	
-			
-		#print result_tuple_lst	
-		self.render("result.html" ,results =result_tuple_lst)
-		
+        result_tuple_lst = []
+        for link in result:
 
-	def get_snippet(self,url,soup):
-		
-		print "curr url"
-		print url
-		result =""
-		p1 = soup.p
-		if not p1 :
-			return ""
-		result+=p1.text+"\n"
+            num_buckets = len(list(Snippet_Bucket.query()))
+            hash_code = G_search.hash_string(link, num_buckets)
+            bucket = Snippet_Bucket.query(
+                Snippet_Bucket.hash_code == str(hash_code)).get()
+            dictionary = bucket.dictionary
+            t = (link, dictionary[link][0], dictionary[link][1])
 
-		while len(result)<150:
+            result_tuple_lst.append(t)
 
-			p2 = p1.findNext('p')
-			if p2:
-				p2_text = p2.text
-				
-				
-				result+=p2.text+"\n"
-				p1 = p2
-			else :
-				return result.encode('utf-8')
-				
-		
-		return str(result.encode('utf-8'))	
+        self.render("result.html", results=result_tuple_lst)
 
-class FBconnect(Handler):
-	def post(self):
-		#current_user = self.current_user
-		#graph = facebook.GraphAPI(self.current_user['access_token'])
-		self.current_user()
+    def get_snippet(self, url, soup):
 
+        result = ""
+        p1 = soup.p
+        if not p1:
+            return ""
 
-	def current_user(self):
-	       if self.session.get("user"):
-	            # user is logged in
-	            return self.session.get("user")
-	       else:
-	            # either user just logged in or just saw the first page
-	            # we'll see here
-	            fb_user = facebook.get_user_from_cookie(self.request.cookies, FACEBOOK_APP_ID, FACEBOOK_APP_SECRET)
-	            if fb_user:
-	                # okay so user logged in.
-	                # now, check to see if existing user
+        result += p1.text + "\n"
 
-	                graph = facebook.GraphAPI(fb_user["access_token"])
-	                profile = graph.get_object("me")
-	                print "end"
-class Display(Handler):
-	def post(self):
-		print "display called"
+        while len(result) < 150:
 
-		result = self.request.get("result")
-		print result 
-		self.render("result.html")
+            p2 = p1.findNext('p')
+            if p2:
+                p2_text = p2.text
 
+                result += p2.text + "\n"
+                p1 = p2
+            else:
+                return result.encode('utf-8')
 
-class FBconnect2(Handler):
-	def post(self):
-	    print "function called"
-	    print self.request.get('STATE')
-	    print self.session['state']
-	    if self.request.get('state') != self.session['state']:
-	        response = make_response(json.dumps('Invalid state parameter.'), 401)
-	        response.headers['Content-Type'] = 'application/json'
-	        return response
-	    access_token = self.request.get('access_token')
-	    print access_token    
-	    #access_token = request.data
-	    print "access token received %s " % access_token
+        return str(result.encode('utf-8'))
 
-	    app_id = json.loads(open('fb_client_secrets.json', 'r').read())[
-	        'web']['app_id']
-	    app_secret = json.loads(
-	        open('fb_client_secrets.json', 'r').read())['web']['app_secret']
-	    url = 'https://graph.facebook.com/oauth/access_token?grant_type=fb_exchange_token&client_id=%s&client_secret=%s&fb_exchange_token=%s' % (
-	        app_id, app_secret, access_token)
-	    h = httplib2.Http()
-	    result = h.request(url, 'GET')[1]
-
-	    
-	    print "result is here"
-	    print result
-
-	    # Use token to get user info from API
-	    userinfo_url = "https://graph.facebook.com/v2.4/me"
-	    # strip expire tag from access token
-	    token = result.split("&")[0]
-
-
-	    url = 'https://graph.facebook.com/v2.4/me?%s&fields=name,id,email' % token
-	    h = httplib2.Http()
-	    result = h.request(url, 'GET')[1]
-	    # print "url sent for API access:%s"% url
-	    # print "API JSON result: %s" % result
-	    data = json.loads(result)
-	    self.sessions['provider'] = 'facebook'
-	    self.sessions['username'] = data["name"]
-	    self.sessions['email'] = data["email"]
-	    self.sessions['facebook_id'] = data["id"]
-
-	    # The token must be stored in the login_session in order to properly logout, let's strip out the information before the equals sign in our token
-	    stored_token = token.split("=")[1]
-	    self.sessions['access_token'] = stored_token
-
-	    # Get user picture
-	    url = 'https://graph.facebook.com/v2.4/me/picture?%s&redirect=0&height=200&width=200' % token
-	    h = httplib2.Http()
-	    result = h.request(url, 'GET')[1]
-	    data = json.loads(result)
-
-	    self.session['picture'] = data["data"]["url"]
-
-	    # see if user exists
-	    #user_id = getUserID(self.session['email'])
-	    #if not user_id:
-	    #    user_id = createUser(self.session)
-	    #self.session['user_id'] = user_id
-	    #print user_id
-
-	    output = ''
-	    output += '<h1>Welcome, '
-	    output += self.session['username']
-
-	    output += '!</h1>'
-	    output += '<img src="'
-	    output += self.session['picture']
-	    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
-
-	    flash("Now logged in as %s" % self.session['username'])
-	    print "success!"
-	    return output
-	#def createUser(session):
-	#    newUser = User(name=session['username'], email=session[
-	#                   'email'], picture=session['picture'])
-	#    session.add(newUser)
-	#    session.commit()
-	#    user = session.query(User).filter_by(email=login_session['email']).one()
-	#    return user.id    
 
 PAGE_RE = r'((?:[ ,./?"\'a-zA-Z0-9_=&-]+?)*)'
 
-		
 
-#PAGE_RE = r'((?:[,.?!'"% a-zA-Z0-9_-]+?)*)'
-
-app = webapp2.WSGIApplication([("/", MainPage),
-								("/initialize_custom_index",Init_custom_index),
-								("/search%s" % PAGE_RE, Search),
-								("/build_custom_index",Build_custom_index),
-								("/send_email",Send_email),
-								("/initialize_public_index",Init_public_index),
-								("/build_public_index",Build_public_index),
-								("/fbconnect",FBconnect),
-								("/display",Display)], debug=True,config=app_config)
+app = webapp2.WSGIApplication([("/", MainPage)
+                               ("/search%s" % PAGE_RE, Search),
+                               ("/send_email", Send_email),
+                               ("/initialize_public_index", Init_public_index),
+                               ("/build_public_index", Build_public_index)], debug=True, config=app_config)
